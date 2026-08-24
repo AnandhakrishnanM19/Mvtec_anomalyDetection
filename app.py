@@ -18,22 +18,17 @@ CATEGORIES = [
 
 @st.cache_resource
 def load_feature_extractor():
-    # Load ResNet18 architecture
-    resnet = models.resnet18(pretrained=False)
-    feature_extractor = nn.Sequential(*list(resnet.children())[:-2]).to(device)
-    
-    # Download custom weights from Hugging Face Space if available, otherwise use default pretrained
-    try:
-        weights_path = hf_hub_download(
-            repo_id="AnandhuMadhu123/bottle-knn-model", 
-            filename="feature_extractor.pth",
-            repo_type="space"
-        )
-        feature_extractor.load_state_dict(torch.load(weights_path, map_location=device))
-    except Exception:
-        resnet_default = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
-        feature_extractor = nn.Sequential(*list(resnet_default.children())[:-2]).to(device)
-
+    resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+    # Truncate up to layer3 to output 256 channels instead of 512
+    feature_extractor = nn.Sequential(
+        resnet.conv1,
+        resnet.bn1,
+        resnet.relu,
+        resnet.maxpool,
+        resnet.layer1,
+        resnet.layer2,
+        resnet.layer3
+    ).to(device)
     feature_extractor.eval()
     return feature_extractor
 
@@ -61,7 +56,7 @@ uploaded_file = st.file_uploader(f"Upload a {selected_category} image...", type=
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption='Uploaded Image', use_container_width=True)
+    st.image(image, caption='Uploaded Image', width='stretch')
     
     knn_clf = load_knn_model(selected_category)
     img_tensor = transform(image).unsqueeze(0).to(device)
@@ -79,4 +74,4 @@ if uploaded_file is not None:
     
     heatmap = cv2.resize(anomaly_map, (224, 224))
     heatmap = (heatmap - heatmap.min()) / (heatmap.max() - heatmap.min() + 1e-8)
-    st.image(heatmap, caption="Anomaly Heatmap", use_container_width=True)
+    st.image(heatmap, caption="Anomaly Heatmap", width='stretch')
