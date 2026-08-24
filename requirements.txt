@@ -6,3 +6,4 @@ opencv-python-headless
 pillow
 joblib
 numpy
+huggingface_hub
