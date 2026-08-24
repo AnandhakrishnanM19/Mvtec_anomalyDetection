@@ -17,7 +17,7 @@ def load_models():
     feature_extractor = nn.Sequential(*list(resnet.children())[:-2]).to(device)
     feature_extractor.eval()
     
-    # 2. Download k-NN model from your Hugging Face Space
+    # 2. Download k-NN model directly from your Hugging Face Space
     knn_path = hf_hub_download(
         repo_id="AnandhuMadhu123/bottle-knn-model", 
         filename="knn_clf_bottle.joblib",
