@@ -18,8 +18,22 @@ CATEGORIES = [
 
 @st.cache_resource
 def load_feature_extractor():
-    resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+    # Load ResNet18 architecture
+    resnet = models.resnet18(pretrained=False)
     feature_extractor = nn.Sequential(*list(resnet.children())[:-2]).to(device)
+    
+    # Download custom weights from Hugging Face Space if available, otherwise use default pretrained
+    try:
+        weights_path = hf_hub_download(
+            repo_id="AnandhuMadhu123/bottle-knn-model", 
+            filename="feature_extractor.pth",
+            repo_type="space"
+        )
+        feature_extractor.load_state_dict(torch.load(weights_path, map_location=device))
+    except Exception:
+        resnet_default = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+        feature_extractor = nn.Sequential(*list(resnet_default.children())[:-2]).to(device)
+
     feature_extractor.eval()
     return feature_extractor
 
@@ -42,7 +56,6 @@ transform = transforms.Compose([
 
 st.title("MVTec AD - Multi-Item Anomaly Detector")
 
-# Dropdown menu to select category
 selected_category = st.selectbox("Select Object Category:", CATEGORIES)
 uploaded_file = st.file_uploader(f"Upload a {selected_category} image...", type=["jpg", "png", "bmp"])
 
@@ -50,9 +63,7 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
     st.image(image, caption='Uploaded Image', use_container_width=True)
     
-    # Load selected category model dynamically
     knn_clf = load_knn_model(selected_category)
-    
     img_tensor = transform(image).unsqueeze(0).to(device)
     
     with torch.no_grad():
