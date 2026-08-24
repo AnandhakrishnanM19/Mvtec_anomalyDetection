@@ -6,19 +6,25 @@ from PIL import Image
 import numpy as np
 import joblib
 import cv2
+from huggingface_hub import hf_hub_download
 
-# Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# 1. Load Feature Extractor
 @st.cache_resource
 def load_models():
-    resnet = models.resnet18(pretrained=False)
+    # 1. Load ResNet18 backbone directly from torchvision
+    resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
     feature_extractor = nn.Sequential(*list(resnet.children())[:-2]).to(device)
-    feature_extractor.load_state_dict(torch.load('feature_extractor.pth', map_location=device))
     feature_extractor.eval()
     
-    knn_clf = joblib.load('knn_clf_bottle.joblib')
+    # 2. Download k-NN model from your Hugging Face Space
+    knn_path = hf_hub_download(
+        repo_id="AnandhuMadhu123/bottle-knn-model", 
+        filename="knn_clf_bottle.joblib",
+        repo_type="space"
+    )
+    knn_clf = joblib.load(knn_path)
+    
     return feature_extractor, knn_clf
 
 feature_extractor, knn_clf = load_models()
