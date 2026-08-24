@@ -16,10 +16,12 @@ CATEGORIES = [
     'tile', 'toothbrush', 'transistor', 'zipper', 'wood'
 ]
 
+# Set defect thresholds per category (Adjust these based on validation testing)
+THRESHOLD = 0.38 
+
 @st.cache_resource
 def load_feature_extractor():
     resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
-    # Truncate up to layer3 to output 256 channels instead of 512
     feature_extractor = nn.Sequential(
         resnet.conv1,
         resnet.bn1,
@@ -72,6 +74,13 @@ if uploaded_file is not None:
         
     st.metric("Max Anomaly Score", f"{anomaly_score:.4f}")
     
+    # --- Clear Defect Verdict Banner ---
+    if anomaly_score > THRESHOLD:
+        st.error(f"❌ **STATUS: DEFECTIVE** (Score: {anomaly_score:.4f} > Threshold: {THRESHOLD})")
+    else:
+        st.success(f"✅ **STATUS: GOOD / NORMAL** (Score: {anomaly_score:.4f} ≤ Threshold: {THRESHOLD})")
+    
+    # Render Heatmap
     heatmap = cv2.resize(anomaly_map, (224, 224))
     heatmap = (heatmap - heatmap.min()) / (heatmap.max() - heatmap.min() + 1e-8)
     st.image(heatmap, caption="Anomaly Heatmap", width='stretch')
