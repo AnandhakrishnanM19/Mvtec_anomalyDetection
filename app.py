@@ -19,7 +19,7 @@ CATEGORIES = [
 THRESHOLDS = {
     'bottle': 0.35,
     'cable': 0.42,
-    'capsule': 0.36,
+    'capsule': 0.42,
     'carpet': 0.45,
     'grid': 0.40,
     'hazelnut': 0.38,
