@@ -31,7 +31,7 @@ THRESHOLDS = {
     'toothbrush': 0.35,
     'transistor': 0.40,
     'zipper': 0.43,
-    'wood': 0.44
+    'wood': 0.38
 }
 
 @st.cache_resource
