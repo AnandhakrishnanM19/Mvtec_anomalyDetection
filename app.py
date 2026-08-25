@@ -16,8 +16,23 @@ CATEGORIES = [
     'tile', 'toothbrush', 'transistor', 'zipper', 'wood'
 ]
 
-# Set defect thresholds per category (Adjust these based on validation testing)
-THRESHOLD = 0.38 
+THRESHOLDS = {
+    'bottle': 0.35,
+    'cable': 0.42,
+    'capsule': 0.36,
+    'carpet': 0.45,
+    'grid': 0.40,
+    'hazelnut': 0.38,
+    'leather': 0.42,
+    'metal_nut': 0.36,
+    'pill': 0.37,
+    'screw': 0.41,    
+    'tile': 0.39,
+    'toothbrush': 0.35,
+    'transistor': 0.40,
+    'zipper': 0.43,
+    'wood': 0.44
+}
 
 @st.cache_resource
 def load_feature_extractor():
@@ -73,12 +88,13 @@ if uploaded_file is not None:
         anomaly_score = np.max(anomaly_map)
         
     st.metric("Max Anomaly Score", f"{anomaly_score:.4f}")
+
+    threshold = THRESHOLDS.get(selected_category, 0.38) if 'THRESHOLDS' in globals() else 0.38
     
-    # --- Clear Defect Verdict Banner ---
-    if anomaly_score > THRESHOLD:
-        st.error(f"❌ **STATUS: DEFECTIVE** (Score: {anomaly_score:.4f} > Threshold: {THRESHOLD})")
+    if anomaly_score > threshold:
+        st.error(f"❌ **STATUS: DEFECTIVE** (Score: {anomaly_score:.4f} > Threshold: {threshold})")
     else:
-        st.success(f"✅ **STATUS: GOOD / NORMAL** (Score: {anomaly_score:.4f} ≤ Threshold: {THRESHOLD})")
+        st.success(f"✅ **STATUS: GOOD / NORMAL** (Score: {anomaly_score:.4f} ≤ Threshold: {threshold})")
     
     # Render Heatmap
     heatmap = cv2.resize(anomaly_map, (224, 224))
