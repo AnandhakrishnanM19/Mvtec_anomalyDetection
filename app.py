@@ -96,7 +96,13 @@ if uploaded_file is not None:
     else:
         st.success(f"✅ **STATUS: GOOD / NORMAL** (Score: {anomaly_score:.4f} ≤ Threshold: {threshold})")
     
-    # Render Heatmap
-    heatmap = cv2.resize(anomaly_map, (224, 224))
-    heatmap = (heatmap - heatmap.min()) / (heatmap.max() - heatmap.min() + 1e-8)
-    st.image(heatmap, caption="Anomaly Heatmap", width='stretch')
+    heatmap_resized = cv2.resize(anomaly_map, (image.size[0], image.size[1]))
+    heatmap_norm = (heatmap_resized - heatmap_resized.min()) / (heatmap_resized.max() - heatmap_resized.min() + 1e-8)
+    heatmap_colored = cv2.applyColorMap(np.uint8(255 * heatmap_norm), cv2.COLORMAP_JET)
+    heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+    
+    # Blend heatmap with original image
+    img_np = np.array(image)
+    overlay = cv2.addWeighted(img_np, 0.6, heatmap_colored, 0.4, 0)
+    
+    st.image(overlay, caption="Anomaly Heatmap Overlay", width='stretch')
